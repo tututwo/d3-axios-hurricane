@@ -1,0 +1,47 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+```{r}
+library(tidyverse)
+library(lubridate)
+```
+
+```{r}
+# data <- read_csv("https://www.ncei.noaa.gov/data/international-best-track-archive-for-climate-stewardship-ibtracs/v04r00/access/csv/ibtracs.since1980.list.v04r00.csv", na = "missing")
+
+# c("USA_WIND","WMO_WIND", "USA_SSHS", "REUNION_WIND", "TD9636_WIND", "STORM_SPEED", "CMA_CAT", "ISO_TIME", "NAME", "USA_STATUS", "SID", "BASIN") %in% colnames(data)
+
+# storm <- 
+# data %>% 
+#   select("USA_WIND", "USA_SSHS", "ISO_TIME", "NAME", "SID", "BASIN") %>% 
+#   filter(BASIN == "NA" | BASIN == "SA") %>% 
+#   filter(USA_WIND != "kts") %>% 
+#   mutate(USA_WIND = as.numeric(USA_WIND) * 1.15078,
+#          BASIN = as.character(BASIN),
+#          year = year(ISO_TIME),
+#          month = as.numeric(month(ISO_TIME))) %>% 
+#   filter(month > 5 & NAME != "NOT_NAMED")
+  
+```
+```{r}
+storm %>% select(NAME) %>% unique() %>% View
+```
+```{r}
+write_csv(storm, "storm.csv")
+```
+
+```{r}
+storm <- 
+storm %>% 
+  mutate(map_date = str_replace(ISO_TIME, '^[0-9]{4}', '2000'))
+  
+```
+
+
