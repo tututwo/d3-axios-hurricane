@@ -44,4 +44,10 @@ storm %>%
   
 ```
 
+```{r}
+storm <- 
+storm %>% 
+  group_by(SID) %>% 
+  mutate(avg_level = max(USA_SSHS)) 
+```
 

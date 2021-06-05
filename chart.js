@@ -3,19 +3,19 @@ async function drawChart() {
   // 1. Access data
   const dataset = await d3.csv("./storm.csv")
 
-  const utcParse = d3.utcParse("%Y-%m-%d %H:%M:%S")
+  const utcParse = d3.utcParse("%Y-%m-%dT%H:%M:%SZ")
 // console.log(utcParse(data[0].data_wind[0].ISO_TIME))
 // console.log(data[0].data_wind[0].ISO_TIME)
 // console.log(utcParse('1987-01-01T00:00:00Z'))
   const xAccessor = d => utcParse(d.map_date)
   const yAccessor = d => +d.USA_WIND
-  const colorAccessor = d => +d.USA_SSHS
+  const colorAccessor = d => +d.avg_level
   const yearAccessor = d => +d.year
   // const dateAccessor = d => dateParser(d.ISO_TIME)
   
-  const data =d3.groups(dataset, d => d.SID).map(([SID, data_wind]) => {return {SID, data_wind}})
+  let data =d3.groups(dataset, d => d.SID).map(([SID, data_wind]) => {return {SID, data_wind}})
   // .map(([n,year_data]) => {return {n, year_data: Object.fromEntries(year_data)}})
-  
+  // data = [data[0]]
   console.log(data)
 
   // const data = ready_data[7][1].map(([name, data_wind]) => {return {name, data_wind}})
@@ -58,15 +58,17 @@ async function drawChart() {
   const yearScale = d3.scaleBand()
                     .domain(d3.range(1980, 2021))
                     .range([dimensions.margin.top, dimensions.boundedHeight])
-  //* map_data
+  //* x: map_date
   const xScale = d3.scaleUtc()
-                  .domain([utcParse('2000-06-01 00:00:00'),utcParse('2000-12-30 00:00:00')])
+                  .domain([utcParse('2000-06-01T00:00:00Z'),utcParse('2000-12-30T00:00:00Z')])
                   .range([dimensions.margin.left, dimensions.boundedWidth])
-  //* wind speed
+  //* y:wind speed
   const yScale = d3.scaleLinear()
                   .domain([11, 190])
                   .range([yearScale.bandwidth(), 0])
 
+  //* color: avg_level
+  const colorScale = d3.scaleThreshold(d3.range(-4, 6), d3.schemeRdBu[10])
 
   const area = d3.area()
             .curve(d3.curveBasis)
@@ -86,14 +88,27 @@ async function drawChart() {
                   .attr('class', "storm")
                     .attr('transform', d =>`translate(0,${yearScale(yearAccessor(d.data_wind[0]))})`)
                     // console.log(xAccessor(data[0].data_wind[0]))
-console.log(xAccessor(data[0].data_wind[0]))
+// console.log(colorAccessor(data[0].data_wind[0]))
+console.log(data[0].data_wind)
+
+
+//? explanation for color here
+// let [hah] = data[0].data_wind // here: i only got the first item of the array.其实还是91个object(array item)中的第一个。是data_wind[0]这个array里的第一个item，who happens to be an object
+// console.log(hah)
+// let {avg_level} = hah
+// console.log(avg_level)
 //! area chart
   const path_selection = wind.append('path')
       .datum(d => d.data_wind)
-      // .attr("fill", d => colorAccessor(d[0]))
-      .style('fill', "steelblue")
+      .attr('fill', d => {
+          //其实不是整个array,不是每组的那整个datum data 的avg,只是去了每组，每个array,里的第一个item,然后access that item(object)'s avg_level
+        const [{avg_level}] = d
+        
+        return colorScale(avg_level)
+      })
       .style('opacity', 0.5)
       .attr("d", area)
+      
   
 //! added line on top
   wind.append('path')
@@ -101,7 +116,7 @@ console.log(xAccessor(data[0].data_wind[0]))
       .attr("d", line)
       .attr("fill", "none")
       .attr("stroke", "#01356e")
-      .attr("stroke-width", 0.5)
+      .attr("stroke-width", 1)
       .attr("stroke-linejoin", "round")
       .attr("stroke-linecap", "round")
 
